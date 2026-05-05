@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interim Meeting - Youth College Language Centre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #dbeafe;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(-45deg, #ffffff, #f8fafc, #f1f5f9, #f8fafc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating Emojis (Upwards) - Fixed Animation */
+        .emoji-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .floating-emoji {
+            position: absolute;
+            bottom: -100px; /* Start below the screen */
+            font-size: 2.5rem;
+            opacity: 0;
+            filter: grayscale(10%);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-120vh) rotate(20deg) scale(1.2); opacity: 0; }
+        }
+
+        /* 使用負數 delay (例如 -5s)，令 Emoji 一開網頁就已經喺半空飄緊，唔使等 */
+        .delay-1 { animation: floatUp 15s linear -2s infinite; left: 10%; }
+        .delay-2 { animation: floatUp 18s linear -7s infinite; left: 85%; font-size: 3rem; }
+        .delay-3 { animation: floatUp 20s linear -12s infinite; left: 75%; }
+        .delay-4 { animation: floatUp 16s linear -4s infinite; left: 15%; font-size: 2rem; }
+        .delay-5 { animation: floatUp 19s linear -9s infinite; left: 50%; font-size: 1.5rem; }
+        .delay-6 { animation: floatUp 22s linear -16s infinite; left: 40%; font-size: 3.5rem; }
+
+        /* Slide Transitions */
+        .slide {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 8rem;
+            z-index: 1;
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            z-index: 10;
+        }
+
+        /* Modern Agenda Cards */
+        .agenda-card {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .agenda-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1);
+            border-color: #bfdbfe;
+        }
+
+        /* Flip Cards */
+        .flip-card {
+            perspective: 1000px;
+            height: 100%;
+            min-height: 260px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .flip-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.95);
+            transition: box-shadow 0.3s ease;
+        }
+        .flip-card:hover .flip-card-front {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card-back {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            padding-top: 2.5rem;
+            border: none;
+        }
+
+        /* Glassmorphism Footer */
+        .footer-bar {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            padding: 1rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            z-index: 50;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen">
+
+    <!-- Floating Emojis Background (Upwards) -->
+    <div class="emoji-container">
+        <div class="floating-emoji delay-1">💡</div>
+        <div class="floating-emoji delay-2">✨</div>
+        <div class="floating-emoji delay-3">🚀</div>
+        <div class="floating-emoji delay-4">📊</div>
+        <div class="floating-emoji delay-5">🎯</div>
+        <div class="floating-emoji delay-6">📝</div>
+    </div>
+
+    <!-- Slides Container -->
+    <div id="slider" class="relative w-full h-[calc(100vh-80px)] max-w-screen-2xl mx-auto">
+
+        <!-- Slide 0: Title -->
+        <div class="slide active items-center text-center">
+            <div class="mb-8 px-6 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 font-bold tracking-widest uppercase text-sm shadow-sm inline-block">
+                Youth College - Language Centre
+            </div>
+            <h1 class="text-7xl font-extrabold text-slate-900 mb-6 leading-tight drop-shadow-sm">
+                AY2526 VOT3002 <br>
+                <span class="text-gradient">Project Skills</span>
+            </h1>
+            <p class="text-4xl text-slate-500 mb-16 font-semibold tracking-wide">Interim Meeting</p>
+            
+            <div class="inline-flex flex-col items-center">
+                <span class="text-sm text-slate-400 uppercase tracking-widest mb-3 font-semibold">Presented by</span>
+                <span class="text-2xl font-bold text-slate-700 bg-white/80 backdrop-blur-md px-10 py-4 rounded-2xl shadow-sm border border-slate-200">
+                    LC Module Team
+                </span>
+            </div>
+        </div>
+
+        <!-- Slide 1: Agenda -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-12 drop-shadow-sm">Meeting Agenda</h2>
+            <div class="grid grid-cols-1 gap-4 max-w-4xl">
+                <div onclick="goToSlide(2)" class="agenda-card p-5 rounded-2xl border border-slate-200 flex items-center cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mr-6 shadow-inner">1</div>
+                    <h3 class="text-3xl font-bold text-slate-800 tracking-tight">Review on Sem 2 Operation</h3>
+                </div>
+                <div onclick="goToSlide(3)" class="agenda-card p-5 rounded-2xl border border-slate-200 flex items-center cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mr-6 shadow-inner">2</div>
+                    <h3 class="text-3xl font-bold text-slate-800 tracking-tight">Feedback on TA01 Idea Generation</h3>
+                </div>
+                <div onclick="goToSlide(4)" class="agenda-card p-5 rounded-2xl border border-slate-200 flex items-center cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mr-6 shadow-inner">3</div>
+                    <h3 class="text-3xl font-bold text-slate-800 tracking-tight">TA02 Interactive Platform</h3>
+                </div>
+                <div onclick="goToSlide(5)" class="agenda-card p-5 rounded-2xl border border-slate-200 flex items-center cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mr-6 shadow-inner">4</div>
+                    <h3 class="text-3xl font-bold text-slate-800 tracking-tight">Sem 3 Reminders (IA01 & IA02)</h3>
+                </div>
+                <div onclick="goToSlide(7)" class="agenda-card p-5 rounded-2xl border border-slate-200 flex items-center cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mr-6 shadow-inner">5</div>
+                    <h3 class="text-3xl font-bold text-slate-800 tracking-tight">Sem-end Operation & Resources</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Review on Sem 2 Operation -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-4">1. Review on Sem 2 Operation</h2>
+            <p class="text-2xl text-slate-500 mb-16">Campus Sharing Sequence</p>
+            
+            <div class="bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-nowrap justify-center items-center gap-3 text-2xl font-bold w-full relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400"></div>
+                
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">KC & PF</div>
+                <div class="text-3xl text-blue-300 animate-pulse">➔</div>
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">KB</div>
+                <div class="text-3xl text-blue-300 animate-pulse" style="animation-delay: 0.2s">➔</div>
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">KF</div>
+                <div class="text-3xl text-blue-300 animate-pulse" style="animation-delay: 0.4s">➔</div>
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">TM</div>
+                <div class="text-3xl text-blue-300 animate-pulse" style="animation-delay: 0.6s">➔</div>
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">TSW</div>
+                <div class="text-3xl text-blue-300 animate-pulse" style="animation-delay: 0.8s">➔</div>
+                <div class="bg-slate-50 text-slate-800 px-8 py-5 rounded-2xl border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform cursor-default">YCM</div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Feedback on TA01 -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-2">2. Feedback on TA01 Idea Generation</h2>
+            <p class="text-2xl text-blue-600 mb-12 font-semibold flex items-center bg-blue-50 inline-flex px-4 py-2 rounded-lg">
+                <svg class="w-6 h-6 mr-2 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                Click the cards to reveal details
+            </p>
+            
+            <div class="grid grid-cols-3 gap-10 h-80">
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="text-6xl mb-6 drop-shadow-sm">👀</div>
+                            <h3 class="text-3xl font-bold text-slate-800 text-center">Observations</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 class="text-xl font-bold text-blue-300 mb-4 border-b border-slate-600/50 pb-3 w-full text-center tracking-widest uppercase">Observations</h4>
+                            <p class="text-2xl text-center leading-relaxed mt-4 font-light">Overall workflow efficiency and student progress tracking.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="text-6xl mb-6 drop-shadow-sm">💬</div>
+                            <h3 class="text-3xl font-bold text-slate-800 text-center">Communication</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 class="text-xl font-bold text-blue-300 mb-4 border-b border-slate-600/50 pb-3 w-full text-center tracking-widest uppercase">Communication</h4>
+                            <p class="text-2xl text-center leading-relaxed mt-4 font-light">Effectiveness of coordination with various Teaching Parties.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="text-6xl mb-6 drop-shadow-sm">⭐</div>
+                            <h3 class="text-3xl font-bold text-slate-800 text-center">Students' Feedback</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 class="text-xl font-bold text-blue-300 mb-4 border-b border-slate-600/50 pb-3 w-full text-center tracking-widest uppercase">Students' Feedback</h4>
+                            <p class="text-2xl text-center leading-relaxed mt-4 font-light">Engagement levels and difficulties encountered by students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: TA02 Platform -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-2">3. TA02 Interactive Platform</h2>
+            <p class="text-2xl text-slate-500 mb-8">Explore our interactive deployment guides</p>
+            
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <!-- Phase 1 Card -->
+                <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden flex flex-col relative group hover:shadow-[0_8px_30px_rgb(37,99,235,0.1)] transition-all">
+                    <!-- Mac Window Header -->
+                    <div class="bg-slate-50/80 border-b border-slate-100 px-5 py-4 flex items-center relative">
+                        <div class="flex gap-2">
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#ff5f56]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#27c93f]"></div>
+                        </div>
+                        <div class="absolute left-1/2 -translate-x-1/2 bg-white border border-slate-200 text-slate-500 text-xs font-semibold px-4 py-1 rounded-md shadow-sm">Phase 1</div>
+                    </div>
+                    <!-- Card Content -->
+                    <div class="p-10 flex-grow bg-gradient-to-b from-blue-50/40 to-white relative overflow-hidden">
+                        <h3 class="text-4xl font-extrabold text-[#1e3a8a] mb-4 relative z-10">Proposal Project</h3>
+                        <p class="text-xl text-blue-600 mb-10 relative z-10">Interactive guide tailored for the proposal stage.</p>
+                        <a href="#" class="block w-full py-4 bg-[#2563eb] text-white text-center rounded-xl font-bold text-xl hover:bg-blue-700 transition-colors shadow-md relative z-10">
+                            Go to Platform &rarr;
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Phase 2 Card -->
+                <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden flex flex-col relative group hover:shadow-[0_8px_30px_rgb(168,85,247,0.1)] transition-all">
+                    <!-- Mac Window Header -->
+                    <div class="bg-slate-50/80 border-b border-slate-100 px-5 py-4 flex items-center relative">
+                        <div class="flex gap-2">
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#ff5f56]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#27c93f]"></div>
+                        </div>
+                        <div class="absolute left-1/2 -translate-x-1/2 bg-white border border-slate-200 text-slate-500 text-xs font-semibold px-4 py-1 rounded-md shadow-sm">Phase 2</div>
+                    </div>
+                    <!-- Card Content -->
+                    <div class="p-10 flex-grow bg-gradient-to-b from-purple-50/40 to-white relative overflow-hidden">
+                        <h3 class="text-4xl font-extrabold text-[#4c1d95] mb-4 relative z-10">Production Project</h3>
+                        <p class="text-xl text-purple-600 mb-10 relative z-10">Interactive guide tailored for the production stage.</p>
+                        <a href="#" class="block w-full py-4 bg-[#9333ea] text-white text-center rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors shadow-md relative z-10">
+                            Go to Platform &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Prompts -->
+            <div class="bg-[#f4f7fa] border border-blue-100 rounded-3xl p-8 shadow-sm">
+                <h4 class="text-2xl font-bold text-[#1e3a8a] mb-5 flex items-center">
+                    <span class="mr-3 text-2xl">🗣️</span> Discussion Prompts
+                </h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start text-[#1e3a8a] text-xl">
+                        <span class="mr-3 text-blue-600 font-bold">&bull;</span> 
+                        <span>How did students react to the interactive elements?</span>
+                    </li>
+                    <li class="flex items-start text-[#1e3a8a] text-xl">
+                        <span class="mr-3 text-blue-600 font-bold">&bull;</span> 
+                        <span>Were there any technical issues or access difficulties?</span>
+                    </li>
+                    <li class="flex items-start text-[#1e3a8a] text-xl">
+                        <span class="mr-3 text-blue-600 font-bold">&bull;</span> 
+                        <span>How can we better integrate these guides into our regular teaching flow?</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: IA01 Reminders -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-2">4. Sem 3 Reminders: IA01 Final Report</h2>
+            <p class="text-2xl text-blue-600 mb-12 font-semibold flex items-center bg-blue-50 inline-flex px-4 py-2 rounded-lg">
+                <svg class="w-6 h-6 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                Click to reveal Assessment Rubrics
+            </p>
+            
+            <div class="grid grid-cols-4 gap-6 h-72">
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front !rounded-3xl !border-slate-200">
+                            <h3 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight whitespace-nowrap">1. Content</h3>
+                        </div>
+                        <div class="flip-card-back !rounded-3xl">
+                            <h4 class="text-lg font-bold text-blue-300 mb-3 border-b border-slate-600/50 pb-2 w-full text-center uppercase tracking-wider">Content</h4>
+                            <p class="text-xl text-center mt-2 font-light">Content coverage, relevancy, and argument development.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front !rounded-3xl !border-slate-200">
+                            <h3 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight whitespace-nowrap">2. Language</h3>
+                        </div>
+                        <div class="flip-card-back !rounded-3xl">
+                            <h4 class="text-lg font-bold text-blue-300 mb-3 border-b border-slate-600/50 pb-2 w-full text-center uppercase tracking-wider">Language</h4>
+                            <p class="text-xl text-center mt-2 font-light">Language accuracy and appropriate vocabulary usage.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front !rounded-3xl !border-slate-200">
+                            <h3 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight whitespace-nowrap">3. Organisation</h3>
+                        </div>
+                        <div class="flip-card-back !rounded-3xl">
+                            <h4 class="text-lg font-bold text-blue-300 mb-3 border-b border-slate-600/50 pb-2 w-full text-center uppercase tracking-wider">Organisation</h4>
+                            <p class="text-xl text-center mt-2 font-light">Report structure, section sequence, and information covered.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="toggleCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front !rounded-3xl !border-slate-200">
+                            <h3 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight whitespace-nowrap">4. Conventions</h3>
+                        </div>
+                        <div class="flip-card-back !rounded-3xl">
+                            <h4 class="text-lg font-bold text-blue-300 mb-3 border-b border-slate-600/50 pb-2 w-full text-center uppercase tracking-wider">Conventions</h4>
+                            <p class="text-xl text-center mt-2 font-light">Relevancy of visuals, formatting (font, spacing), and design.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: IA02 Reminders -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-10">4. Sem 3 Reminders: IA02 Presentation</h2>
+            
+            <div class="grid grid-cols-2 gap-10">
+                <div class="bg-white/90 backdrop-blur-md p-10 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 class="text-3xl font-bold text-slate-800 mb-8 border-b border-slate-100 pb-4 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 p-3 rounded-xl mr-4">⏱️</span> Time Limits
+                    </h3>
+                    <ul class="space-y-6 text-2xl text-slate-600">
+                        <li class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                            <span class="font-medium">5-student group</span> <strong class="text-blue-600 text-3xl">15-20 mins</strong>
+                        </li>
+                        <li class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                            <span class="font-medium">4-student group</span> <strong class="text-blue-600 text-3xl">12-16 mins</strong>
+                        </li>
+                        <li class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                            <span class="font-medium">3-student group</span> <strong class="text-blue-600 text-3xl">9-12 mins</strong>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-10 rounded-[2rem] shadow-lg text-white border border-slate-700 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-10">⚠️</div>
+                    <h3 class="text-3xl font-bold mb-8 text-red-400 flex items-center border-b border-slate-700 pb-4 relative z-10">
+                        Important Reminders
+                    </h3>
+                    <ul class="space-y-8 text-xl leading-relaxed relative z-10">
+                        <li class="flex items-start">
+                            <span class="text-3xl mr-5 mt-1">✂️</span> 
+                            <div><strong class="text-white text-2xl block mb-1">Skip TA02 Content</strong><span class="text-slate-300">No need to present Background, Purpose, or Methodology again.</span></div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-3xl mr-5 mt-1">🎯</span> 
+                            <div><strong class="text-white text-2xl block mb-1">Select Key Info</strong><span class="text-slate-300">Guide students to select only the most crucial points.</span></div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-3xl mr-5 mt-1">🚫</span> 
+                            <div><strong class="text-white text-2xl block mb-1">Language Consistency</strong><span class="text-slate-300">Avoid code-mixing. A group MUST use a consistent language. <br><span class="text-red-400 font-bold mt-2 inline-block bg-red-400/10 px-3 py-1 rounded-lg">Otherwise, MAX 3 marks for Language.</span></span></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Sem-end Operation Reminders -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-10">5. Sem-end Operation: Important Reminders</h2>
+            
+            <div class="space-y-6 max-w-5xl">
+                <div class="bg-white/90 backdrop-blur-md p-8 rounded-[2rem] border-l-[12px] border-blue-500 shadow-sm flex items-center transform transition-transform hover:translate-x-2">
+                    <div class="text-5xl mr-8 bg-blue-50 p-4 rounded-2xl">⏱️</div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-slate-800 mb-2">Delivery Hours</h3>
+                        <p class="text-2xl text-slate-600">MCs and MLs must ensure LC sessions Delivery hours are exactly <strong class="text-blue-600 bg-blue-50 px-2 rounded">22 hours</strong>. It cannot be less.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 backdrop-blur-md p-8 rounded-[2rem] border-l-[12px] border-purple-500 shadow-sm flex items-center transform transition-transform hover:translate-x-2">
+                    <div class="text-5xl mr-8 bg-purple-50 p-4 rounded-2xl">📑</div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-slate-800 mb-2">Mark Sheets Handover</h3>
+                        <p class="text-xl text-slate-600 leading-relaxed">All mark sheets must be returned by MC to Trade Counterparts. <br><strong class="text-purple-600 bg-purple-50 px-2 py-1 rounded mt-2 inline-block">Reminder for MLs:</strong> Do NOT submit to Trade Counterparts before the Supervising SL reviews the marks.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 backdrop-blur-md p-8 rounded-[2rem] border-l-[12px] border-green-500 shadow-sm flex items-center transform transition-transform hover:translate-x-2">
+                    <div class="text-5xl mr-8 bg-green-50 p-4 rounded-2xl">🤝</div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-slate-800 mb-2">Internal Standardisation</h3>
+                        <p class="text-2xl text-slate-600">MC must ensure all new colleagues attend an Internal Standardisation Meeting to understand the <strong class="text-green-600 bg-green-50 px-2 rounded">MARKING STANDARDS</strong>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Sem-end Resources -->
+        <div class="slide">
+            <h2 class="text-5xl font-extrabold text-slate-900 mb-2">5. Sem-end Resources</h2>
+            <p class="text-2xl text-slate-500 mb-10">Standardisation Meeting Videos</p>
+            
+            <div class="grid grid-cols-3 gap-8">
+                <a href="#" class="bg-white/90 backdrop-blur-md p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 flex flex-col items-center text-center cursor-pointer text-decoration-none group">
+                    <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-5xl mb-6 group-hover:scale-110 transition-transform">📊</div>
+                    <h3 class="text-3xl font-bold text-slate-800 mb-3">TA02 Project Plan</h3>
+                    <p class="text-xl text-slate-500 mb-8 flex-grow font-light">Briefing • Scripts • Marking</p>
+                    <div class="w-full py-4 rounded-2xl bg-slate-50 text-xl font-bold text-slate-700 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                        View Video
+                    </div>
+                </a>
+
+                <a href="#" class="bg-white/90 backdrop-blur-md p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 flex flex-col items-center text-center cursor-pointer text-decoration-none group">
+                    <div class="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center text-5xl mb-6 group-hover:scale-110 transition-transform">📑</div>
+                    <h3 class="text-3xl font-bold text-slate-800 mb-3">IA01 Final Reports</h3>
+                    <p class="text-xl text-slate-500 mb-8 flex-grow font-light">Briefing • Scripts • Marking</p>
+                    <div class="w-full py-4 rounded-2xl bg-slate-50 text-xl font-bold text-slate-700 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">
+                        View Video
+                    </div>
+                </a>
+
+                <a href="#" class="bg-white/90 backdrop-blur-md p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 flex flex-col items-center text-center cursor-pointer text-decoration-none group">
+                    <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-5xl mb-6 group-hover:scale-110 transition-transform">🗣️</div>
+                    <h3 class="text-3xl font-bold text-slate-800 mb-3">IA02 Presentation</h3>
+                    <p class="text-xl text-slate-500 mb-8 flex-grow font-light">Scripts • Live Marking</p>
+                    <div class="w-full py-4 rounded-2xl bg-slate-50 text-xl font-bold text-slate-700 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
+                        View Video
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 9: Ending Slide -->
+        <div class="slide items-center text-center">
+            <h2 class="text-6xl font-extrabold text-slate-900 mb-12 drop-shadow-sm">Contact us if you need help</h2>
+            
+            <div class="bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-sm border border-slate-200 mb-16 inline-block text-left">
+                <div class="flex items-center mb-6 pb-6 border-b border-slate-100">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mr-6">👩🏻‍🏫</div>
+                    <div>
+                        <div class="text-2xl font-bold text-slate-800">MTL: Rebecca AU <span class="text-blue-500 font-medium text-xl ml-2">(@ymau)</span></div>
+                        <div class="text-xl text-slate-500 mt-1 flex items-center"><span class="mr-2">📞</span> Tel: 2449-1331</div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-3xl mr-6">👨🏻‍🏫</div>
+                    <div>
+                        <div class="text-2xl font-bold text-slate-800">AMTL: Edwin CHAN <span class="text-purple-500 font-medium text-xl ml-2">(@edrecanc)</span></div>
+                        <div class="text-xl text-slate-500 mt-1 flex items-center"><span class="mr-2">📞</span> Tel: 2149-7420</div>
+                    </div>
+                </div>
+            </div>
+
+            <h1 class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 animate-pulse">
+                Happy Teaching! 🎉
+            </h1>
+        </div>
+
+    </div>
+
+    <!-- Footer & Navigation -->
+    <div class="footer-bar">
+        <div class="flex items-center gap-4">
+            <div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
+            <div class="text-slate-700 font-bold text-xl tracking-wide">
+                LC Module Team <span class="text-slate-400 mx-2">|</span> Interim Meeting
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="prevSlide()" class="bg-white/80 hover:bg-white text-slate-700 border border-slate-200 px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-sm hover:shadow-md flex items-center">
+                ← Prev
+            </button>
+            <button onclick="nextSlide()" class="bg-slate-900 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-md hover:shadow-lg flex items-center">
+                Next →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+
+        function updateSlider() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlider();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlider();
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < slides.length) {
+                currentSlide = index;
+                updateSlider();
+            }
+        }
+
+        function toggleCard(element) {
+            const inner = element.querySelector('.flip-card-inner');
+            inner.classList.toggle('flipped');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        updateSlider();
+    </script>
+</body>
+</html>
